@@ -2,4 +2,5 @@ SpeechRecognition
 googletrans
 gtts
 playsound
+portaudio
 PyAudio
