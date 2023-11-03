@@ -123,7 +123,7 @@ language_dict = {
 }
 
 
-img=Image.open('finallogo.jpg')
+#img=Image.open('finallogo.jpg')
 
 col1, col2 = st.columns([1,3])
 
