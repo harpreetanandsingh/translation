@@ -127,7 +127,7 @@ language_dict = {
 
 col1, col2 = st.columns([1,3])
 
-with col1:
+#with col1:
         #st.image(img, width=220)
 
 with col2:
