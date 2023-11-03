@@ -3,4 +3,5 @@ SpeechRecognition
 googletrans
 gtts
 playsound
+portaudio19-dev
 PyAudio
