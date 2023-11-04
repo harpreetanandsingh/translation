@@ -222,7 +222,7 @@ def recognize_speech(prompt, language='en'):
                     stop_prompt="Stop recording", 
                     just_once=False,
                     use_container_width=False,
-                    key=None)
+                    key='recorder')
         #with sr.Microphone() as source:
         with audio_source as source:
             st.write(prompt)
