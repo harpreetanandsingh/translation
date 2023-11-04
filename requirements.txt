@@ -1,3 +1,4 @@
+python-gnuradio-audio-portaudio
 streamlit
 SpeechRecognition
 googletrans
