@@ -217,13 +217,14 @@ st.markdown(hide_st_style, unsafe_allow_html=True)
 # Function to recognize speech
 def recognize_speech(prompt, language='en'):
     try:
-        #with sr.Microphone() as source:
-        with mic_recorder(
+        audio_source = mic_recorder(
                     start_prompt="Start recording",
                     stop_prompt="Stop recording", 
                     just_once=False,
                     use_container_width=False,
-                    key=None) as source:
+                    key=None)
+        #with sr.Microphone() as source:
+        with audio_source as source:
             st.write(prompt)
             # Use recognizer to adjust to ambient noise
             recognizer.adjust_for_ambient_noise(source, duration=1)
