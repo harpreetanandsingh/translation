@@ -1,3 +1,2 @@
-python-gnuradio-audio-portaudio
 python3-pyaudio
 portaudio19-dev
