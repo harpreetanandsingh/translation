@@ -4,3 +4,4 @@ googletrans
 gtts
 playsound
 PyAudio
+pygobject
