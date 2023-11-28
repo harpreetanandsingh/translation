@@ -2,6 +2,7 @@ streamlit
 SpeechRecognition
 googletrans
 gtts
+pygobject
 playsound
 pydub
 streamlit-mic-recorder
