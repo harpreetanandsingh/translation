@@ -3,11 +3,9 @@ SpeechRecognition
 googletrans
 gtts
 playsound
-PyAudio
-pygobject
-av
-streamlit_webrtc==0.45.0
-twilio~=8.1.0
 pydub
 streamlit-mic-recorder
 transformers
+torch 
+torchvision 
+torchaudio
