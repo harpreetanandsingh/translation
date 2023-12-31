@@ -1,6 +1,8 @@
 import streamlit as st
 import speech_recognition as sr
 from googletrans import Translator
+from google_trans_new import google_translator  
+from deep_translator import GoogleTranslator
 from gtts import gTTS
 from playsound import playsound
 from PIL import Image
@@ -8,6 +10,9 @@ from streamlit_mic_recorder import mic_recorder,speech_to_text
 from transformers import AutoTokenizer, M2M100ForConditionalGeneration
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, pipeline
 from transformers import Wav2Vec2ForCTC, Wav2Vec2Tokenizer
+from sentence_transformers import SentenceTransformer, util
+import torch
+
 # import logging
 # import logging.handlers
 # import queue
@@ -46,7 +51,6 @@ language_dict = {
     'punjabi': 'pa',
     'tamil': 'ta',
     'telugu': 'te',
-    'urdu': 'ur',
 }
 
 # language_dict = {
@@ -179,20 +183,20 @@ language_dict = {
 #         }
 
 #         # Apply custom theme to Streamlit
-#         st.markdown(
-#             f"""
-#             <style>
-#             :root {{
-#                 --primary-color: {custom_theme["theme"]["primaryColor"]};
-#                 --background-color: {custom_theme["theme"]["backgroundColor"]};
-#                 --secondary-background-color: {custom_theme["theme"]["secondaryBackgroundColor"]};
-#                 --text-color: {custom_theme["theme"]["textColor"]};
-#                 --font: {custom_theme["theme"]["font"]};
-#             }}
-#             </style>
-#             """,
-#             unsafe_allow_html=True
-#         )
+        # st.markdown(
+        #     f"""
+        #     <style>
+        #     :root {{
+        #         --primary-color: {custom_theme["theme"]["primaryColor"]};
+        #         --background-color: {custom_theme["theme"]["backgroundColor"]};
+        #         --secondary-background-color: {custom_theme["theme"]["secondaryBackgroundColor"]};
+        #         --text-color: {custom_theme["theme"]["textColor"]};
+        #         --font: {custom_theme["theme"]["font"]};
+        #     }}
+        #     </style>
+        #     """,
+        #     unsafe_allow_html=True
+        # )
 
 
         
@@ -262,25 +266,41 @@ language_dict = {
 
 # Function to translate speech
 def translate_speech():
-    # Get source language name and convert it to code
+    
     #source_language_name = recognize_speech("Please speak the source language name (e.g., 'English'): ")
     
         
-
+    st.title("BITranSlate")
     # st.write("Record your voice, and play the recorded audio:")
     # audio=mic_recorder(start_prompt="⏺️",stop_prompt="⏹️",key='recorder')
 
-    # if audio:       
-    #     st.audio(audio['bytes'])
-
+    custom_theme = {
+            "theme": {
+                "primaryColor": "#000000",
+                "backgroundColor": "#89939E",
+                "secondaryBackgroundColor": "#262730",
+                "textColor": "#FFFFFF",
+                "font": "Serif"
+            }
+        }
+    st.markdown(
+            f"""
+            <style>
+            :root {{
+                --primary-color: {custom_theme["theme"]["primaryColor"]};
+                --background-color: {custom_theme["theme"]["backgroundColor"]};
+                --secondary-background-color: {custom_theme["theme"]["secondaryBackgroundColor"]};
+                --text-color: {custom_theme["theme"]["textColor"]};
+                --font: {custom_theme["theme"]["font"]};
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
     source_language_name = st.selectbox('Please input the source language',language_dict)
     source_language = language_dict[source_language_name]
     target_language_name = st.selectbox('Please input the target language',language_dict)
     target_language = language_dict[target_language_name]
-    #state=st.session_state
-
-    # if 'text_received' not in state:
-    #     state.text_received=[]
 
     c1,c2=st.columns(2)
     with c1:
@@ -288,23 +308,7 @@ def translate_speech():
     with c2:
         text=speech_to_text(language=source_language,use_container_width=True,just_once=True,key='STT')
 
-    # if text:       
-    #     state.text_received.append(text)
-
-    # for text in state.text_received:
-    #     st.text(text)
-    # Get sentence to translate
     sentence = text
-    # while sentence is None:
-    #     sentence = recognize_speech("Please speak the sentence to translate:", language=source_language)
-
-    # Get destination language name and convert it to code
-    # destination_language_name = recognize_speech("Please speak the destination language name (e.g., 'French'): ")
-    # destination_language = language_dict.get(destination_language_name.lower(), 'en')
-
-    # Translate the text to the desired language
-    #translated_text = translator.translate(sentence, src=source_language, dest=target_language)
-
     nllb_langs = {'hindi':'hin_Deva',
                   'english':'eng_Latn',
                   'punjabi':'pan_Guru',
@@ -317,24 +321,46 @@ def translate_speech():
                   'malayalam':'mal_Mlym',
                   'kannada':'kan_Knda',
                   'gujarati':'guj_Gujr',
-                  'afrikaans':'hin_Deva'
                   }
-
+    # translator_google = Translator(service_urls=[
+    #   'translate.googleapis.com'
+    # ])
+    #translator_google = google_translator()
     translator = pipeline('translation', model=AutoModelForSeq2SeqLM.from_pretrained("facebook/nllb-200-distilled-600M"), tokenizer=AutoTokenizer.from_pretrained("facebook/nllb-200-distilled-600M"), src_lang=nllb_langs[source_language_name], tgt_lang=nllb_langs[target_language_name], max_length = 4000)
     text_to_translate = text
     translated_text = translator(text_to_translate)[0]['translation_text']
+    translated_text_google = GoogleTranslator(source='auto', target=target_language).translate(text_to_translate)
+    #translated_text_google = translator_google.translate(text_to_translate, lang_tgt=target_language)
+
+    # translated_text_google = translator_google.translate(text_to_translate, src=source_language, dest=target_language)
+
+    #translated_text_google = translator_google.translate(text_to_translate, src=source_language, dest=target_language)
+    model2 = SentenceTransformer("google/muril-base-cased")
+            # Compute embeddings for the sentences
+    embedding = model2.encode(text_to_translate, convert_to_tensor=True)
+    embeddings_nllb = model2.encode(translated_text, convert_to_tensor=True)
+    embeddings_google = model2.encode(translated_text_google, convert_to_tensor=True)
+
+    # Calculate cosine similarities
+    cosine_score_nllb = util.cos_sim(embedding, embeddings_nllb).item()
+    cosine_score_google = util.cos_sim(embedding, embeddings_google).item()
+
+    # Select the translation with the higher cosine similarity score
+    selected_translation = translated_text if cosine_score_nllb > cosine_score_google else translated_text_google
 
     st.write(f"Source Language: {source_language_name}")
     st.write(f"Sentence: {sentence}")
     st.write(f"Destination Language: {target_language_name}")
-    st.write(f"Translated Text: {translated_text}")
+    st.write(f"Translated Text from NLLB: {translated_text}")
+    st.write(f"Translated Text from Google Translate: {translated_text_google}")
+    st.write(f"More accurate translation: {selected_translation}")
 
     # Using Google-Text-to-Speech to speak the translated text
     speak = gTTS(text=translated_text, lang=target_language, slow=False)
-    speak.save("translated_voice.mp3")
+    #speak.save("translated_voice.mp3")
 
     # Play the translated voice
-    playsound('translated_voice.mp3')
+    #playsound('translated_voice.mp3')
 
 #if st.button("  CLICK HERE TO TRANSLATE  "):
 translate_speech()
